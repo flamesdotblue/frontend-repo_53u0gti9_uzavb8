@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import { Stethoscope, MessageSquare, FileText, Lightbulb, Settings } from 'lucide-react';
+import { Stethoscope, MessageSquare, FileText, Lightbulb, Settings, LogOut, User } from 'lucide-react';
 
-export default function Sidebar({ active, onChange }) {
+export default function Sidebar({ active, onChange, currentUser, onLogout }) {
   const items = useMemo(
     () => [
       { key: 'chat', label: 'Chat', icon: MessageSquare },
@@ -41,6 +41,21 @@ export default function Sidebar({ active, onChange }) {
           </button>
         ))}
       </nav>
+
+      {currentUser && (
+        <div className="mx-4 mb-3 p-3 rounded-lg bg-white border flex items-center gap-2 text-sm text-gray-700">
+          <User size={16} className="text-blue-600" />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium truncate">{currentUser.name || currentUser.email}</div>
+            <div className="text-xs text-gray-500 truncate">{currentUser.email}</div>
+          </div>
+          {onLogout && (
+            <button onClick={onLogout} title="Sign out" className="text-gray-500 hover:text-red-600">
+              <LogOut size={16} />
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="px-5 py-4 text-xs text-gray-500">
         <p>

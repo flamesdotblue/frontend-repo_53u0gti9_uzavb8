@@ -7,6 +7,7 @@ import ChatArea from './components/ChatArea.jsx';
 import ReportsPanel from './components/ReportsPanel.jsx';
 import HealthTips from './components/HealthTips.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
+import Login from './components/Login.jsx';
 
 function useApiKey() {
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('medisense_api_key') || '');
@@ -16,8 +17,26 @@ function useApiKey() {
   return [apiKey, setApiKey];
 }
 
+function useCurrentUser() {
+  const [user, setUser] = useState(() => {
+    try {
+      const raw = localStorage.getItem('medisense_current_user');
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  });
+  const login = (profile) => setUser(profile);
+  const logout = () => {
+    localStorage.removeItem('medisense_current_user');
+    setUser(null);
+  };
+  return { user, login, logout };
+}
+
 export default function App() {
   const [apiKey, setApiKey] = useApiKey();
+  const { user, login, logout } = useCurrentUser();
   const [active, setActive] = useState('chat');
   const [reports, setReports] = useState(() => {
     try {
@@ -47,9 +66,10 @@ export default function App() {
   };
 
   const Panel = useMemo(() => {
+    if (!user) return <Login onAuth={login} />;
     switch (active) {
       case 'chat':
-        return <ChatArea apiKey={apiKey} onAddReport={addReport} />;
+        return <ChatArea apiKey={apiKey} onAddReport={addReport} currentUser={user} />;
       case 'reports':
         return <ReportsPanel />;
       case 'tips':
@@ -59,7 +79,7 @@ export default function App() {
       default:
         return null;
     }
-  }, [active, apiKey]);
+  }, [active, apiKey, user]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-950 to-black text-gray-900">
@@ -94,7 +114,7 @@ export default function App() {
       <div className="relative -mt-10 md:-mt-16 z-10">
         <div className="mx-auto max-w-7xl grid grid-cols-1 md:grid-cols-[260px_1fr] gap-4 px-4 md:px-8">
           <div className="rounded-2xl overflow-hidden shadow-lg">
-            <Sidebar active={active} onChange={setActive} />
+            <Sidebar active={active} onChange={setActive} currentUser={user} onLogout={logout} />
           </div>
 
           <div className="rounded-2xl overflow-hidden shadow-lg bg-gray-50 min-h-[60vh]">

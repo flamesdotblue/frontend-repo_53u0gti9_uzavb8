@@ -72,10 +72,13 @@ function ChatBubble({ role, text, time }) {
   );
 }
 
-export default function ChatArea({ apiKey, onAddReport }) {
+export default function ChatArea({ apiKey, onAddReport, currentUser }) {
+  const uid = currentUser?.id || 'guest';
+  const storageKey = `medisense_messages_${uid}`;
+
   const [messages, setMessages] = useState(() => {
     try {
-      const saved = localStorage.getItem('medisense_messages');
+      const saved = localStorage.getItem(storageKey);
       return saved ? JSON.parse(saved) : [];
     } catch {
       return [];
@@ -87,9 +90,20 @@ export default function ChatArea({ apiKey, onAddReport }) {
 
   const listRef = useRef(null);
 
+  // Reload messages if user changes
   useEffect(() => {
-    localStorage.setItem('medisense_messages', JSON.stringify(messages));
-  }, [messages]);
+    try {
+      const saved = localStorage.getItem(storageKey);
+      setMessages(saved ? JSON.parse(saved) : []);
+    } catch {
+      setMessages([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uid]);
+
+  useEffect(() => {
+    localStorage.setItem(storageKey, JSON.stringify(messages));
+  }, [messages, storageKey]);
 
   useEffect(() => {
     if (listRef.current) {
